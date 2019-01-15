@@ -7,6 +7,8 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.jdbc.core.JdbcTemplate
+import org.springframework.jdbc.core.RowMapper
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.transaction.annotation.Transactional
 
@@ -16,9 +18,15 @@ import static org.hamcrest.Matchers.containsInAnyOrder
 @RunWith(SpringRunner)
 @SpringBootTest
 @Transactional
-class JdbcOfficerDAOTest {
-    @Autowired @Qualifier('jdbcOfficerDAO')
+class JpaOfficerDAOTest {
+    @Autowired
+    @Qualifier('jpaOfficerDAO')
     OfficerDAO dao
+
+    @Autowired
+    JdbcTemplate template
+
+    RowMapper idMapper = { rs, num -> rs.getInt('id') }
 
     @Test
     void save() throws Exception {
@@ -29,9 +37,11 @@ class JdbcOfficerDAOTest {
 
     @Test
     void findByIdThatExists() throws Exception {
-        Optional<Officer> officer = dao.findById(1)
-        assert officer.present
-        assert 1 == officer.get().id
+        template.query('select id from officers', idMapper).each { id ->
+            Optional<Officer> officer = dao.findById(id)
+            assert officer.present
+            assert id == officer.get().id
+        }
     }
 
     @Test
@@ -54,7 +64,7 @@ class JdbcOfficerDAOTest {
 
     @Test
     void delete() throws Exception {
-        (1..5).each { id ->
+        template.query('select id from officers', idMapper).each { id ->
             Optional<Officer> officer = dao.findById(id)
             assert officer.present
             dao.delete(officer.get());
@@ -64,7 +74,7 @@ class JdbcOfficerDAOTest {
 
     @Test
     void existsById() throws Exception {
-        (1..5).each { id ->
+        template.query('select id from officers', idMapper).each { id ->
             assert dao.existsById(id)
         }
     }
