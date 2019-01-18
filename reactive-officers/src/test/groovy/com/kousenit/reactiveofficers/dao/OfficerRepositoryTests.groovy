@@ -38,7 +38,7 @@ class OfficerRepositoryTests {
     void save() {
         Officer lorca = new Officer(rank: Rank.CAPTAIN, first: "Gabriel", last: "Lorca")
         StepVerifier.create(repository.save(lorca))
-                .expectNextMatches { it.id != '' }  // CHECK CONDITION
+                .expectNextMatches { it.id != '' }
                 .verifyComplete()
     }
 
